@@ -17,16 +17,17 @@ public class Mon_interface extends JFrame implements ActionListener {
 	// TODO les attributs utilisés
 	private boolean a_verification=false;
 			private JTabbedPane tp;
-			private JPanel pou,insertion,recherche,pn,ps,pc;
+			private JPanel pou,insertion,recherche,pn,ps,pc,m_connexion;
 			private JScrollPane sp;
 			private JCheckBox c_cours,c_parcours;
-	        private TextField mStat, ref_livre, auteur_livre, t_id_parcours, m_query,id,mdp,nom_parcours,idcours,nom_cours,an_etude,idens,mdp_ens,nom_ens;
-		    private TextField r_nom_cours;
+	        private TextField mStat_in, ref_livre, auteur_livre, t_id_parcours, m_query,id,mdp,nom_parcours,idcours,nom_cours,an_etude,idens,mdp_ens,nom_ens;
+		    private TextField r_nom_cours,r_status;
 		    private JComboBox liste_parcours,r_liste_parcours;
 		
 		    TextArea mRes;
 		    private Button b1, b2, b3, b4,b5,insert_livre,insert_ens,insert_parcours,insert_cours, cours_parcours,livre_cours,chercher;
-	        private static final long serialVersionUID = 1L; 
+	        private static final long serialVersionUID = 1L;
+			private static final int String = 0; 
 		
 		    static Connection connexion;
 		    static Statement stmt ;
@@ -35,8 +36,14 @@ public class Mon_interface extends JFrame implements ActionListener {
 		setSize(720, 700);
 		setResizable(false);
 		setLocationRelativeTo(this);
+		setBackground(Color.decode("#C298C2"));
+		// le paneau de connexion
+		m_connexion=new JPanel();
+		add(m_connexion,BorderLayout.NORTH);
+		m_connexion.setBackground(Color.decode("#55ADA9"));
 		
 		tp=new JTabbedPane();
+		tp.setBackground(Color.decode("#55ADA9"));
 		//sp =new JScrollPane(tp,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		add(tp);
 		//onglet recheche
@@ -80,8 +87,10 @@ public class Mon_interface extends JFrame implements ActionListener {
 	
 		
 		// mon code
-		mStat = new TextField(80);
-		mStat.setEditable(false);
+		mStat_in = new TextField(80);
+		mStat_in.setEditable(false);
+		r_status=new TextField(85);
+		r_status.setEditable(false);
 		
 		//authentification et connexion
 		
@@ -157,7 +166,9 @@ public class Mon_interface extends JFrame implements ActionListener {
 		 * (with a self-reference) to capture the user actions.  
 		 */
 		b1 = new Button("CONNECT");
+		b1.setBackground(Color.green);
 		b2 = new Button("DISCONNECT");
+		b2.setBackground(Color.red);
 		b3 = new Button("QUERY");
 		
 		
@@ -168,8 +179,8 @@ public class Mon_interface extends JFrame implements ActionListener {
 		pn.add(id);
 		pn.add(mdp);
 		pn.add(b5);
-		pn.add(b1) ;
-		pn.add(b2) ;
+		m_connexion.add(b1) ;
+		m_connexion.add(b2) ;
 		recherche.add(b3) ;
 		
 		b1.addActionListener(this);
@@ -179,7 +190,8 @@ public class Mon_interface extends JFrame implements ActionListener {
 		
 		
 	
-		
+		//insertion status
+				pc.add(mStat_in);
 		//insertion cours
 		pc.add(new Label("                                               iinput cours                                                       ",Label.CENTER));
 		pc.add(idcours);
@@ -192,8 +204,7 @@ public class Mon_interface extends JFrame implements ActionListener {
 		pc.add(mdp_ens);
 		pc.add(nom_ens);
 		pc.add(insert_ens);
-		//insertion status
-		pc.add(mStat);
+		
 		//insertion livre
 		pc.add(new Label("                                                         Input livre:                                                                        ", Label.CENTER));
 		pc.add(ref_livre);
@@ -212,6 +223,7 @@ public class Mon_interface extends JFrame implements ActionListener {
 		ps.add(cours_parcours);
 		// la reQUETTE
 		recherche.add(m_query);
+		recherche.add(r_status);
 		recherche.add(c_cours);
 		recherche.add(r_nom_cours);
 		
@@ -232,7 +244,7 @@ public class Mon_interface extends JFrame implements ActionListener {
 		Object cause = event.getSource();
 
 		// Act depending on the user action
-		// Button CONNECT
+		// Button CONNECT#55ADA9
 		if (cause == b1)
 		{
 			connectToDatabase();
@@ -265,8 +277,94 @@ public class Mon_interface extends JFrame implements ActionListener {
 		if(cause==livre_cours) {
 			insertLienLC();
 		}
+		if (cause==insert_ens) {
+			insertEnseignant();
+		}
+		if (cause==insert_cours) {
+			insertCours();
+		}
+		if (cause==c_cours) {
+			c_parcours.setSelected(false);
+		}
+		if(cause==c_parcours) {
+			c_cours.setSelected(false);
+			
+		}
+		if(cause==chercher) {
+
+			
+			if(c_parcours.isSelected()) {
+				findparcours();
+			}
+			if(c_cours.isSelected()) {
+				findcours();
+			}
+			}
 	}
-	
+	//tous les livres d'un cours
+	private void findcours() {
+		String query="select livre.ref,livre.auteur "
+				+ "from  cours, cours_has_livre, livre  "
+				+ "where cours.idcours = cours_has_livre.idcours  "
+				+ "and cours_has_livre.ref=livre.ref "				
+				+ "and cours.nom_cours='"+r_nom_cours.getText()+"'";
+		ResultSet rs = null;
+		try {
+			
+			stmt = connexion.createStatement();
+			String auteur;
+			rs = stmt.executeQuery(query);
+			int ref;
+			setStatus("Querying the database");
+			mRes.setText("reference\t auteur \n");
+			while(rs.next()){
+			     ref=rs.getInt("ref");
+				auteur = rs.getString("auteur");
+				
+				mRes.append(""+ref+"\t");
+				mRes.append(auteur+"\n");
+				
+				
+			}}catch(Exception e) {
+					System.err.println(e.getMessage());
+					setStatus("Query failed");
+				}
+	}
+	// tous les livres d'un parcours
+	private void findparcours() {
+		String query="select livre.ref,livre.auteur "
+				+ "from   cours_has_parcours, cours, cours_has_livre, livre  "
+				+ "where cours.idcours = cours_has_parcours.idcours  "
+				+ "and cours.idcours = cours_has_livre.idcours  "
+				+ "and cours_has_livre.ref=livre.ref "
+				+ "and cours_has_parcours.idparcours = "+(1+r_liste_parcours.getSelectedIndex());
+				
+		ResultSet rs = null;
+		try {
+			
+			stmt = connexion.createStatement();
+			String auteur;
+			rs = stmt.executeQuery(query);
+			int ref;
+			setStatus("Querying the database");
+			mRes.setText("reference\t auteur \n");
+			while(rs.next()){
+			     ref=rs.getInt("ref");
+				auteur = rs.getString("auteur");
+				
+				mRes.append(""+ref+"\t");
+				mRes.append(auteur+"\n");
+				
+				}
+				
+			}
+		
+		
+		catch(Exception e) {
+			System.err.println(e.getMessage());
+			setStatus("Query failed");
+		}
+}
 
 	//authentification dans la base
 	private void authentification() {
@@ -285,7 +383,8 @@ public class Mon_interface extends JFrame implements ActionListener {
 	 * @param text The text to set. 
 	 */
 	private void setStatus(String text){
-		mStat.setText("Status: " + text);
+		mStat_in.setText("Status: " + text);
+		r_status.setText("Status: " + text);
 	}
 	
 	/**
@@ -293,7 +392,7 @@ public class Mon_interface extends JFrame implements ActionListener {
 	 */
 	private void connectToDatabase(){
 		String a_name = "user_17002447";
-		String a_base = "jdbc:mysql://mysql.istic.univ-rennes1.fr/base_17002447";
+		String a_base = "jdbc:mysql://mysql.istic.univ-rennes1.fr/base_17002447";//17002447";
 		String a_mdp  = "Icibic5678#main";
 		try{
 			Class.forName("com.mysql.jdbc.Driver");
@@ -325,17 +424,34 @@ public class Mon_interface extends JFrame implements ActionListener {
 	 * Execute a query and display the results. Implement the database querying and the 
 	 * display of the results here 
 	 */
+	/**
+	 * Execute a query and display the results. Implement the database querying and the 
+	 * display of the results here 
+	 */
 	private void queryDatabase(){
+
+		ResultSet rs = null;
 		try {
-			Statement m_stmt = connexion.createStatement();
+			stmt = connexion.createStatement();
 			String sql;
+			String res = "";
 			sql = m_query.getText();
-			ResultSet rs = stmt.executeQuery(sql);
+			rs = stmt.executeQuery(sql);
 			setStatus("Querying the database");
-			mRes.setText("The query result is presented here.\n");
-			mRes.append("Joe\n");
-			mRes.append("John\n");
-			mRes.append("...\n");
+			while(rs.next()){
+				//String nom = rs.getString("idparcours");
+				//String age= rs.getString("nom_parcours");
+				int n=rs.getFetchSize();
+				for (int i = 0; i < 1; i++) {
+					mRes.append((String)rs.getString(i));
+				}
+				//String couleur = rs.getString("COULEUR");
+				
+				//res+= "Le nom est " + nom + ", il est age de " + age +
+						//" ans et ses yeux sont de couleur ";//;couleur + "\n";
+			}
+			//System.out.println(res); //test de la string retournee par la boucle while
+			//mRes.setText(res);
 		}
 		catch(Exception e) {
 			System.err.println(e.getMessage());
@@ -343,34 +459,13 @@ public class Mon_interface extends JFrame implements ActionListener {
 		}
 	}
 
-	/**
-	 * Insert tuples to the database. 
-	 */
-	/*
-	private void insertDatabase(){
-		try{
-			stmt = connexion.createStatement();
-			String name = ref_livre.getText();
-			String age = auteur_livre.getText();
-			String color = m3.getText();
-			String insert = "Insert  INTO  values('" + name + "' , '" + age 
-					+"' , '" + color + "');";
-			stmt.executeUpdate(insert);
-			setStatus("Inserting --( " + name + ", " + age + ", " + color + " )-- to the database");
-		} catch(Exception e){
-			System.err.println(e.getMessage());
-			setStatus("Insertion failed");
-		}
-
-	}
-	*/
 	
 	private void insertLivre(){
 		try{
 			stmt = connexion.createStatement();
 			String ref = ref_livre.getText();
-			String author = auteur_livre.getText();
-			String insert = "Insert  INTO `base_17002447`.`livre` (`ref`, `auteur`) values (\'" + ref + "\', \'" + author 
+			String author = auteur_livre.getText();//`base_17002447`.
+			String insert = "Insert  INTO `livre` (`ref`, `auteur`) values (\'" + ref + "\', \'" + author 
 					+"\');";
 			stmt.executeUpdate(insert);
 			setStatus("Inserting --( " + ref + ", " + author + " )-- to the database");
@@ -386,10 +481,43 @@ public class Mon_interface extends JFrame implements ActionListener {
 			stmt = connexion.createStatement();
 			String identifiant = t_id_parcours.getText();
 			String nom = nom_parcours.getText();
-			String insert = "Insert  INTO `base_17002447`.`Parcours` values('" + identifiant + "' , '" + nom 
+			String insert = "Insert  INTO `Parcours` values('" + identifiant + "' , '" + nom 
 					+"');";
 			stmt.executeUpdate(insert);
 			setStatus("Inserting --( " + identifiant + ", " + nom + " )-- to the database");
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+			setStatus("Insertion failed");
+		}
+
+	}
+	private void insertEnseignant(){
+		try{
+			stmt = connexion.createStatement();
+			String identifiant = idens.getText();
+			String nom = nom_ens.getText();
+			String mdp=mdp_ens.getText();
+			String insert = "Insert  INTO `enseignant` values('" + identifiant + "' , '" +mdp+"' , '"+ nom 
+					+"');";
+			stmt.executeUpdate(insert);
+			setStatus("Inserting --( " + identifiant + ", " +mdp+"' , '"+ nom + " )-- to the database");
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+			setStatus("Insertion failed");
+		}
+
+	}
+	private void insertCours(){
+		try{
+			stmt = connexion.createStatement();
+			String identifiant = idcours.getText();
+			String nom = nom_cours.getText();
+			String annee=an_etude.getText();
+			String id_ens=idens.getText();
+			String insert = "Insert  INTO `cours` values('" + identifiant + "' , '" + nom +"' , '"+annee+"' , '"+id_ens
+					+"');";
+			stmt.executeUpdate(insert);
+			setStatus("Inserting --( " + identifiant + ", " +mdp+"' , '"+ nom + " )-- to the database");
 		} catch(Exception e){
 			System.err.println(e.getMessage());
 			setStatus("Insertion failed");
@@ -401,8 +529,8 @@ public class Mon_interface extends JFrame implements ActionListener {
 		try{
 			stmt = connexion.createStatement();
 			String idCours = idcours.getText();
-			String idParcours = t_id_parcours.getText();
-			String insert = "Insert  INTO `base_17002447`.`cours_has_parcours` values('" + idCours + "' , '" + idParcours 
+			String idParcours = (liste_parcours.getSelectedIndex()+1)+"";
+			String insert = "Insert  INTO `cours_has_parcours` values('" + idCours + "' , '" + idParcours 
 					+"');";
 			stmt.executeUpdate(insert);
 			setStatus("Inserting --( " + idCours + ", " + idParcours + " )-- to the database");
@@ -419,7 +547,7 @@ public class Mon_interface extends JFrame implements ActionListener {
 			stmt = connexion.createStatement();
 			String idLivre = ref_livre.getText();
 			String idCours = idcours.getText();
-			String insert = "Insert  INTO `base_17002447`.`cours_has_livre` (`idcours`, `ref`) values('" + idCours + "' , '" + idLivre 
+			String insert = "Insert  INTO `cours_has_livre` (`idcours`, `ref`) values('" + idCours + "' , '" + idLivre 
 					+"');";
 			stmt.executeUpdate(insert);
 			setStatus("Inserting --( " + idCours + ", " + idLivre + " )-- to the database");
@@ -429,6 +557,7 @@ public class Mon_interface extends JFrame implements ActionListener {
 		}
 
 	}
+	
 	
 	private boolean verifAuth(){
 		try {
