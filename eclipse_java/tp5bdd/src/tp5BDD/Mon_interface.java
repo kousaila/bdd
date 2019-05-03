@@ -391,9 +391,9 @@ public class Mon_interface extends JFrame implements ActionListener {
 	 * Procedure, where the database connection should be implemented. 
 	 */
 	private void connectToDatabase(){
-		String a_name = "user_17002447";
-		String a_base = "jdbc:mysql://mysql.istic.univ-rennes1.fr/base_17002447";//17002447";
-		String a_mdp  = "Icibic5678#main";
+		String a_name = "user_18018960";
+		String a_base = "jdbc:mysql://mysql.istic.univ-rennes1.fr/base_18018960";//17002447";
+		String a_mdp  = "Koukou1201";//"Icibic5678#main";
 		try{
 			Class.forName("com.mysql.jdbc.Driver");
 			connexion = DriverManager.getConnection(a_base, a_name, a_mdp );
@@ -587,13 +587,8 @@ public class Mon_interface extends JFrame implements ActionListener {
 	}
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		/**
-		 * Definition of text fields
-		 */
-		//ref_livre = new TextField(80);
-		//ref_livre.setText("What are you going to do when the light is:");
-		//ref_livre.setEditable(false);
+	
+	
 		Mon_interface ong=new Mon_interface();
 		ong.setVisible(true);
 	}
